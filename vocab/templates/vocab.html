@@ -1,0 +1,146 @@
+<!doctype html>
+<html>
+   <head>
+      <!-- Using Bootstrap, so that we're `responsive`! -->
+      <!-- Bootstrap requires the following three meta tags to fully function -->
+      <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <!-- Javascript and Cascading Style Sheets (css) libraries -->
+      <!-- mostly from content delivery networks                 -->
+      <!-- jquery; CDN load is usually quick because it's likely cached -->
+      <script type="text/javascript"
+         src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+      <!-- 12 column grid rearranges itself for smaller screens or windows. -->
+      <!-- This project is using an older version, make sure to check out newer versions! -->
+      <!-- http://getbootstrap.com/getting-started/  -->
+      <!-- Compiled and minified CSS -->
+      <link rel="stylesheet"
+         href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
+         integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7"
+         crossorigin="anonymous">
+      <!-- Compiled and minified JavaScript -->
+      <script
+         src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"
+         integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS"
+         crossorigin="anonymous"></script>
+      <!-- Let's set our title! -->
+      <title>Vocabulary Anagram</title>
+      <link rel="stylesheet" href="/static/jumble.css" />
+   </head>
+   <body>
+      <div class="container">
+         <div class="row">
+            <div class="col-xs-6 text-center">
+               <h1 id = "caption">Words</h1>
+            </div>
+         </div>
+         <!-- Vocabularly words layed out in 6 columns;
+             bootstrap may collapse to fewer columns and
+             more rows if the window is narrow.
+            -->
+         <div id="row" class="row">
+            {% for word in g.vocab %}
+            <div class="col-xs-2 text-center"> {{ word }} </div>
+            {% if loop.index is divisibleby 3 %}
+         </div>
+         <!-- row -->
+         <div class="row">
+            {% endif %}
+            {% endfor %}
+         </div>
+         <!-- row -->
+         <br />
+         <div class="row">
+            <div class="col-xs-6 text-center">
+               Use letters from
+            </div>
+         </div>
+         <div class="row">
+            <div class="col-xs-6 text-center lead">
+               <strong>{{ session.jumble }}</strong>
+            </div>
+         </div>
+         <div class="row">
+            <div class="col-xs-6 text-center">
+               to spell {{session.target_count}} words from the list.
+            </div>
+            <!-- col -->
+         </div>
+         <!-- row -->
+         <br />
+         <div class="row">
+            <div class="col-xs-6 text-center">
+               <!-- <label for="attempt">Word:</label> -->
+               <label id="word" for="attempt">Word:</label>
+               <input id="attempt" name="attempt" type="text" width="15"
+                  autocomplete="off"  autofocus />
+               <!--<input type="submit" name="try" />-->
+            </div>
+         </div>
+         <!-- JavaScript will insert text here -->
+         <p id="response"> </p>
+         <p id="found"> </p>
+         <p id="results"></p>
+         <!-- Here is where we use AJAX to update our page without refreshing -->
+         <script>
+            $("#attempt").keyup(function(event) {
+               var txt = $("#attempt").val().toLowerCase();  // Current content of the input field
+               var keycode = event.which;       
+               var letter = String.fromCharCode(keycode); 
+
+               if (! "ABCDEFGHIJKLMNOPQRSTUVWXYZ".includes(letter)) { return }
+
+               $.getJSON( "/_check", { txt: txt }).done(
+                           function(data) {
+                           m = data.m;
+                           matched = data.matched;
+                           console.log(data)
+                           console.log(m)
+                           htmlString = "";
+                           // for each value of m passed in from flask program, respond 
+                           // accordingly
+                           if (m == 0) {
+                              console.log(m);
+                              $("#response").html(txt+" isn't in the list of words");
+                              $("#response").css("color", "red");
+                           }
+                           else if (m == 1) {
+                              console.log(m);
+                              $("#response").html("");
+                              $("#found").html("<h2>You found</h2>");
+                              $("#results").html($("#results").html() + " " + txt);
+                              $("#attempt").val("");
+                           }
+                           else if (m == 2) {
+                              console.log(m);
+                              $("#response").html("You already found "+txt);
+                              $("#response").css("color", "red");
+                           }
+                           else if (m == 3) {
+                              console.log(m);
+                              $("#response").html(txt+' can\'t be made from the letters');
+                              $("#response").css("color", "red");
+                           }
+                           else if (m == 4) {
+                              console.log("SUCCESS!!");
+                              $("#caption").html("<h2>SUCCESS! GOOD WORK</h2>");
+                              $("#response").hide();
+                              $("#results").hide();
+                              $("#found").hide();
+                              $("#attempt").hide();
+                              $("#word").hide();
+                              $("#row").hide();
+                              $("#message").hide();
+                           }
+                           }
+                        ).fail(
+                           // if errors can't be handled
+                        );
+               });
+         </script>
+         <br />
+      </div>
+      <!-- container -->
+   </body>
+</html>
